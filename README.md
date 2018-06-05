@@ -1,2 +1,2 @@
-# Word-Guess
-Guessing game ala Hangman
+# Psychic-Game
+Guessing game for assignment
