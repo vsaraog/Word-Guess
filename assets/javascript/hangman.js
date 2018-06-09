@@ -1,6 +1,18 @@
 
 "use strict";
 
+const WORD_LIST = [
+    {tech: "HTML", img: "html.png"},
+    {tech: "CSS", img: "css.png"},
+    {tech: "Javascript", img: "javascript.png"},
+    {tech: "Bootstrap", img: "bootstrap.jpeg"},
+    {tech: "jQuery", img: "jquery.jpeg"},
+    {tech: "firebase", img: "firebase.png"},
+    {tech: "reactjs", img: "reactjs.png"}
+];
+Object.freeze(WORD_LIST);
+
+
 var winCount = 0;
 var lossCount = 0;
 var guessHistory = [];
@@ -13,49 +25,62 @@ printOut();
 
 document.onkeyup = processUserGuess;
 
-initState();
-
 function initState() {
     guessHistory = [];
     guessesLeft = 10;
-    computerChoice = getComputerChoice().toUpperCase().split("");
+
+    if (computerChoice != undefined) {
+        console.assert(computerChoice.img != undefined, "Image not set");
+        // VIK_QUESTION: Why jQuery is not working
+        //$("#img-tech").html("src=assests/images/"+computerChoice.img);
+        var img = document.getElementById("img-tech");
+        img.src = "assets/images/"+computerChoice.img;
+    }
+
+    computerChoice = getComputerChoice();
+    // Normalize. Uppercase, Remove spaces and make it an array
+    computerChoice.tech = computerChoice.tech.toUpperCase().split(" ").join("");
 
     // Create an array, which will have correct guesses of the user
     userCorrectGuesses = [];
-    for (var i = 0; i < computerChoice.length; ++i)
+    for (var i = 0; i < computerChoice.tech.length; ++i)
         userCorrectGuesses.push("");
 }
 
 function processUserGuess(event) {
-    //debugger
+    var userMsg = document.getElementById("user-message");
+    userMsg.innerHTML = "";
+
+    displayMsgToUser("");
+
     var userGuess = event.key.toUpperCase();
-    debugger
     if (isValidInput(userGuess)) {
         // Search if user already guess that letter
         if (guessHistory.indexOf(userGuess) === -1) {
             guessHistory.push(userGuess);
             --guessesLeft;
 
-            if (computerChoice.indexOf(userGuess) !== -1) {
-                processCorrectGuess(userGuess);
-            }
-            else {
-                processWrongGuess(userGuess);
+            if (guessesLeft < 0) {
+                userLose();
             }
 
+            if (computerChoice.tech.indexOf(userGuess) !== -1) {
+                processCorrectGuess(userGuess);
+            }
+  
             printOut();
         }
     }
     else {
-        alert("Please press A-Z keys only");
+        userMsg.innerHTML = "Please press A-Z keys only";
     }
 }
 
 function processCorrectGuess(userGuess) {
     console.assert(userGuess !== undefined, "Invalid input");
     
-    for (var i = 0; i < computerChoice.length; ++i) {
-        if (userGuess === computerChoice[i]) {
+    for (var i = 0; i < computerChoice.tech.length; ++i) {
+        if (userGuess === computerChoice.tech[i]) {
 
             console.assert(userCorrectGuesses[i] === "", 
                 "user guesses at index\"" + i + "\" already filled with letter \"" + 
@@ -66,17 +91,23 @@ function processCorrectGuess(userGuess) {
     }
     // If all letters are populated
     if (userCorrectGuesses.indexOf("") === -1) {
-        alert("You win!");
+        displayMsgToUser("Yay you win!!!", "text-success");
         ++winCount;
         initState();
     }
 }
 
-function processWrongGuess(userGuess) {
-    if (guessesLeft === 0) {
-        ++lossCount;
-        initState();
-    }
+function userLose() {
+    ++lossCount;
+    displayMsgToUser("Sorry, better luck next time", "text-danger");
+    initState();
+}
+
+function displayMsgToUser(msg, textClass)
+{
+    var userMsg = document.getElementById("win-lose-msg");
+    userMsg.textContent = msg;
+    userMsg.classList.add(textClass);
 }
 
 function generateRandomNum(max)
@@ -84,16 +115,15 @@ function generateRandomNum(max)
     return Math.floor(Math.random() * Math.ceil(max));
 }
 
-
 function getComputerChoice()
 {
-    var bands = ["Metallica", "Nirvana", "Guns N Roses"];
-    var index = generateRandomNum(bands.length);
+    var index = generateRandomNum(WORD_LIST.length);
 
-    console.assert(index >= 0 && index < bands.length, 
+    console.assert(index >= 0 && index < WORD_LIST.length, 
         "Random generator returned outside the valid values. Index: " + index);
 
-    return bands[index];
+    // Remove spaces in the word, if any
+    return WORD_LIST[index];
 }
 
 function isValidInput(userIn)
@@ -108,9 +138,10 @@ function printOut() {
     var guessHistElem = document.getElementById("user-guess-history");
     var correctGuesses = document.getElementById("user-correct-guesses");
     
-    winElem.textContent = "Wins:" + winCount;
-    lossElem.textContent = "Loss:" + lossCount;
-    guessesLeftElem.textContent = "Guesses Left:" + guessesLeft; 
-    guessHistElem.textContent = guessHistory.join(", ");
+    //$("#win").text("Wins: " + winCount)
+    winElem.textContent = "Wins: " + winCount;
+    lossElem.textContent = "Loss: " + lossCount;
+    guessesLeftElem.textContent = "Guesses Left: " + guessesLeft; 
+    guessHistElem.textContent = "My Guesses: " + guessHistory.join(", ");
     correctGuesses.textContent = userCorrectGuesses.join(" ");
 }
